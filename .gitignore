@@ -3,6 +3,7 @@ node_modules
 .eve
 .vercel
 .workflow-data
+data
 .next
 .output
 .nitro

@@ -1,15 +1,29 @@
 import { eveChannel } from "eve/channels/eve";
-import { localDev, placeholderAuth, vercelOidc } from "eve/channels/auth";
+import { localDev, vercelOidc, type AuthFn } from "eve/channels/auth";
+import { getSessionFromRequest } from "@/lib/auth/seal";
+
+// 把应用登录态（iron-session cookie）映射成 eve principal。
+// route auth 只负责"验出你是谁"；"你能进哪个 workspace"由应用层（lib/workspaces.ts）校验
+// （见 eve docs: auth-and-route-protection.md「route auth does not enforce session ownership」）。
+function appSession(): AuthFn<Request> {
+  return async (request) => {
+    const session = await getSessionFromRequest(request);
+    if (!session) return null; // 跳过，交给下一条
+    return {
+      authenticator: "app",
+      principalId: session.userId,
+      principalType: "user",
+      attributes: { username: session.username },
+    };
+  };
+}
 
 export default eveChannel({
   auth: [
-    // 让 eve TUI 和你的 Vercel 部署能访问已部署的 agent。
+    appSession(),
+    // 让 eve TUI 和 Vercel 部署的内部调用访问 agent。
     vercelOidc(),
-    // 在 localhost 上对 `eve dev` 和 REPL 开放；生产环境忽略。
+    // localhost 上对 server-to-server 调用与 REPL 开放；生产环境忽略。
     localDev(),
-    // 该占位鉴权在生产环境不会允许浏览器请求。
-    // 请替换为你应用的鉴权提供方（如 Auth.js 或 Clerk），
-    // 或对公开 demo 使用 none()。
-    placeholderAuth(),
   ],
 });
