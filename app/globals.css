@@ -1,6 +1,15 @@
 @import "tailwindcss";
 @source "../node_modules/streamdown/dist/*.js";
 
+/* 锁 light：把 dark variant 改为基于 .dark 类，页面不加该类即永远 light（DESIGN.md 无 dark token）。 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * 设计 token 严格依据 DESIGN.md（Mistral 风格）。
+ * - 语义变量（--primary 等）供 shadcn 组件复用；值换为 DESIGN 的 Mistral 橙/奶油/中性色。
+ * - 扩展色（cream/sunshine/ink/hairline 等）直接以 bg-cream / text-ink 等 utility 使用。
+ * - 第一期锁定 light：DESIGN.md 未提供 dark token，移除暗色覆盖。
+ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -20,60 +29,72 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+
+  /* Mistral 扩展色（DESIGN.md） */
+  --color-cream: var(--cream);
+  --color-cream-soft: var(--cream-soft);
+  --color-cream-deeper: var(--cream-deeper);
+  --color-beige-deep: var(--beige-deep);
+  --color-sunshine: var(--sunshine-500);
+  --color-yellow-saturated: var(--yellow-saturated);
+  --color-ink: var(--ink);
+  --color-slate: var(--slate);
+  --color-steel: var(--steel);
+  --color-stone: var(--stone);
+  --color-hairline: var(--hairline);
+  --color-hairline-soft: var(--hairline-soft);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-surface-code: var(--surface-code);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 :root {
   color-scheme: light;
-  /* Soft neutral page with white elevated surfaces so cards/composer pop. */
-  --background: oklch(0.971 0 0);
-  --foreground: oklch(0.16 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0 0);
-  --primary: oklch(0.19 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.94 0 0);
-  --secondary-foreground: oklch(0.19 0 0);
-  --muted: oklch(0.94 0 0);
-  --muted-foreground: oklch(0.6 0 0);
-  --accent: oklch(0.94 0 0);
-  --accent-foreground: oklch(0.19 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.916 0 0);
-  --input: oklch(0.916 0 0);
-  --ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
-}
+  --radius: 12px;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-  }
+  /* 基础语义（shadcn 兼容，值为 DESIGN.md token） */
+  --background: #ffffff; /* canvas */
+  --foreground: #1f1f1f; /* ink */
+  --card: #ffffff;
+  --card-foreground: #1f1f1f;
+  --popover: #ffffff;
+  --popover-foreground: #1f1f1f;
+  --primary: #fa520f; /* Mistral orange */
+  --primary-foreground: #ffffff;
+  --secondary: #fff8e0; /* cream */
+  --secondary-foreground: #1f1f1f;
+  --muted: #fafafa; /* surface */
+  --muted-foreground: #6a6a6a; /* steel */
+  --accent: #fff8e0;
+  --accent-foreground: #1f1f1f;
+  --destructive: #cc3a05; /* primary-deep */
+  --border: #e5e5e5; /* hairline */
+  --input: #c7c7c7; /* hairline-strong */
+  --ring: #fa520f;
+
+  /* Mistral 扩展色（DESIGN.md） */
+  --cream: #fff8e0;
+  --cream-soft: #fffaeb;
+  --cream-deeper: #fff0c2;
+  --beige-deep: #e6d5a8;
+  --sunshine-500: #ffb83e;
+  --yellow-saturated: #ffd900;
+  --ink: #1f1f1f;
+  --slate: #4a4a4a;
+  --steel: #6a6a6a;
+  --stone: #8a8a8a;
+  --hairline: #e5e5e5;
+  --hairline-soft: #ededed;
+  --hairline-strong: #c7c7c7;
+  --surface-code: #1c1c1e;
 }
 
 * {
@@ -88,6 +109,7 @@ body {
   min-height: 100%;
   margin: 0;
   background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-sans);
 }
 
