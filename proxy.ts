@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+// Next 16 起 middleware 改名为 proxy。功能不变：在请求完成前做粗粒度登录态守卫。
 // 与 lib/auth/session.ts 的 SESSION_COOKIE 保持一致。
 const SESSION_COOKIE = "ai-universe-session";
 
 // 粗粒度守卫：受保护路径若无 session cookie 则跳登录。
 // 真正的鉴权在各 API 与 eve AuthFn 内解密校验（cookie 存在 ≠ 有效）。
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
   if (!hasSession) {
     const url = request.nextUrl.clone();
