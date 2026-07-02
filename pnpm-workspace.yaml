@@ -5,9 +5,11 @@ minimumReleaseAgeExclude:
   - "@workflow/*"
   - ai
   - experimental-ai-sdk-code-mode
+  - crossws
   - eve
   - nitro
   - rolldown
+  - srvx
   - workflow
 allowBuilds:
   sharp: false

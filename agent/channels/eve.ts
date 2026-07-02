@@ -3,13 +3,13 @@ import { localDev, placeholderAuth, vercelOidc } from "eve/channels/auth";
 
 export default eveChannel({
   auth: [
-    // Lets the eve TUI and your Vercel deployments reach the deployed agent.
+    // 让 eve TUI 和你的 Vercel 部署能访问已部署的 agent。
     vercelOidc(),
-    // Open on localhost for `eve dev` and the REPL; ignored in production.
+    // 在 localhost 上对 `eve dev` 和 REPL 开放；生产环境忽略。
     localDev(),
-    // This placeholder will not allow browser requests in production.
-    // Replace it with your app's auth provider, like Auth.js or Clerk,
-    // or use none() for a public demo.
+    // 该占位鉴权在生产环境不会允许浏览器请求。
+    // 请替换为你应用的鉴权提供方（如 Auth.js 或 Clerk），
+    // 或对公开 demo 使用 none()。
     placeholderAuth(),
   ],
 });
