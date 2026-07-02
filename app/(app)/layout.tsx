@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { readonly children: React
   return (
     <div className="flex min-h-dvh flex-col">
       <AppHeader username={session.username} />
-      <main className="flex flex-1 flex-col">{children}</main>
+      <main className="flex min-h-0 flex-1 flex-col">{children}</main>
       <SunsetStripe />
     </div>
   );

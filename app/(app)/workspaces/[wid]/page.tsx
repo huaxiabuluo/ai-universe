@@ -1,5 +1,4 @@
 import { notFound, redirect } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
 import {
   assertMember,
@@ -9,6 +8,7 @@ import {
   type Workspace,
 } from "@/lib/workspaces";
 import { MembersPanel } from "./_components/members-panel";
+import { WorkspaceChat } from "./_components/workspace-chat";
 
 export default async function WorkspacePage({
   params,
@@ -35,14 +35,12 @@ export default async function WorkspacePage({
 
   const members = await listMembers(wid);
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-6 py-8">
-      <h1 className="font-display text-2xl tracking-tight">{workspace.name}</h1>
+    <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col gap-4 px-6 py-6">
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-2xl tracking-tight">{workspace.name}</h1>
+      </div>
       <MembersPanel currentUserId={session.userId} initialMembers={members} workspaceId={wid} />
-      <Card>
-        <CardContent>
-          <p className="text-steel text-sm py-12 text-center">协作聊天即将上线（下一阶段接入）</p>
-        </CardContent>
-      </Card>
+      <WorkspaceChat workspaceId={wid} />
     </div>
   );
 }
