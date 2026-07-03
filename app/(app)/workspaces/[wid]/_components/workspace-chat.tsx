@@ -5,17 +5,15 @@ import { defaultMessageReducer } from "eve/client";
 import type { EveMessageData, HandleMessageStreamEvent } from "eve/client";
 import { useEffect, useRef, useState } from "react";
 import { AgentMessage } from "@/app/_components/agent-message";
+import { Button } from "@/components/ui/button";
 import {
   Conversation,
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import {
-  PromptInput,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  type PromptInputMessage,
-} from "@/components/ai-elements/prompt-input";
+import { Textarea } from "@/components/ui/textarea";
+
+const ENTER_KEY = "Enter";
 
 type Floor = { holder: "ai" | string | null; by?: string };
 
@@ -25,6 +23,7 @@ export function WorkspaceChat({ workspaceId }: { readonly workspaceId: string })
   const reducerRef = useRef(defaultMessageReducer());
   const [data, setData] = useState<EveMessageData>(() => reducerRef.current.initial());
   const [floor, setFloor] = useState<Floor>({ holder: null });
+  const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -65,10 +64,11 @@ export function WorkspaceChat({ workspaceId }: { readonly workspaceId: string })
   const busy = floor.holder !== null || submitting;
   const status: ChatStatus = submitting ? "submitted" : floor.holder !== null ? "streaming" : "ready";
 
-  function send(message: PromptInputMessage) {
-    const text = message.text.trim();
+  function send() {
+    const text = draft.trim();
     if (!text || busy) return;
     const submissionId = crypto.randomUUID();
+    setDraft("");
     setSubmitting(true);
     setError(null);
     // 乐观展示用户消息，让提交后立即有反馈；权威 message.received 到达后 reducer 会替换。
@@ -91,35 +91,28 @@ export function WorkspaceChat({ workspaceId }: { readonly workspaceId: string })
       if (res.status === 409) {
         setError("AI 正在回复，请稍候或点停止中断");
       } else if (!res.ok) {
-        setError("发送失败");
-        setData((prev) =>
-          reducerRef.current.reduce(prev, {
-            type: "client.message.failed",
-            data: {
-              createdAt: Date.now(),
-              error: { message: "发送失败" },
-              message: text,
-              submissionId,
-            },
-          }),
-        );
+        markFailed(text, submissionId);
       }
     } catch {
-      setError("发送失败");
-      setData((prev) =>
-        reducerRef.current.reduce(prev, {
-          type: "client.message.failed",
-          data: {
-            createdAt: Date.now(),
-            error: { message: "发送失败" },
-            message: text,
-            submissionId,
-          },
-        }),
-      );
+      markFailed(text, submissionId);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function markFailed(text: string, submissionId: string) {
+    setError("发送失败");
+    setData((prev) =>
+      reducerRef.current.reduce(prev, {
+        type: "client.message.failed",
+        data: {
+          createdAt: Date.now(),
+          error: { message: "发送失败" },
+          message: text,
+          submissionId,
+        },
+      }),
+    );
   }
 
   async function interrupt() {
@@ -147,13 +140,30 @@ export function WorkspaceChat({ workspaceId }: { readonly workspaceId: string })
         <ConversationScrollButton />
       </Conversation>
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      <PromptInput onSubmit={send}>
-        <PromptInputTextarea
+      <div className="flex items-end gap-2">
+        <Textarea
+          className="min-h-20 flex-1 resize-none bg-card"
           disabled={busy}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === ENTER_KEY && !event.shiftKey && !event.nativeEvent.isComposing) {
+              event.preventDefault();
+              send();
+            }
+          }}
           placeholder={busy ? "等待 AI 回复（点停止可中断）…" : "发送消息…"}
+          value={draft}
         />
-        <PromptInputSubmit onStop={interrupt} status={status} />
-      </PromptInput>
+        {status === "streaming" ? (
+          <Button onClick={interrupt} type="button" variant="outline">
+            停止
+          </Button>
+        ) : (
+          <Button disabled={busy || !draft.trim()} onClick={send} type="button">
+            {status === "submitted" ? "发送中…" : "发送"}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
