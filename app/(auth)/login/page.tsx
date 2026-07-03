@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -30,8 +28,7 @@ export default function LoginPage() {
       });
       if (res.ok) {
         shouldResetLoading = false;
-        router.push("/workspaces");
-        router.refresh();
+        window.location.assign("/workspaces");
         return;
       }
       const data = (await res.json().catch(() => ({}))) as { error?: string };
