@@ -32,27 +32,42 @@ function rowToWorkspace(row: Record<string, unknown>): Workspace {
 }
 
 export function slugify(name: string): string {
-  const base = name.trim().toLowerCase().replace(/\s+/g, "-").slice(0, 24) || "space";
+  const base =
+    name
+      .normalize("NFKD")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 24) || "space";
   return `${base}-${nanoid(6)}`;
 }
 
 export async function createWorkspace(input: {
   name: string;
-  slug: string;
+  slug?: string;
   ownerId: string;
 }): Promise<Workspace> {
   await ensureSchema();
   const id = nanoid();
+  const slug = input.slug ?? slugify(input.name);
   const now = Date.now();
-  await db().execute({
-    sql: "INSERT INTO workspaces (id, name, slug, owner_id, eve_session_id, created_at) VALUES (?, ?, ?, ?, NULL, ?)",
-    args: [id, input.name, input.slug, input.ownerId, now],
-  });
-  await db().execute({
-    sql: "INSERT INTO workspace_members (workspace_id, user_id, role, joined_at) VALUES (?, ?, 'owner', ?)",
-    args: [id, input.ownerId, now],
-  });
-  return { id, name: input.name, slug: input.slug, ownerId: input.ownerId, eveSessionId: null };
+  const tx = await db().transaction();
+  try {
+    await tx.execute({
+      sql: "INSERT INTO workspaces (id, name, slug, owner_id, eve_session_id, created_at) VALUES (?, ?, ?, ?, NULL, ?)",
+      args: [id, input.name, slug, input.ownerId, now],
+    });
+    await tx.execute({
+      sql: "INSERT INTO workspace_members (workspace_id, user_id, role, joined_at) VALUES (?, ?, 'owner', ?)",
+      args: [id, input.ownerId, now],
+    });
+    await tx.commit();
+  } catch (error) {
+    await rollbackQuietly(tx);
+    throw error;
+  }
+  return { id, name: input.name, slug, ownerId: input.ownerId, eveSessionId: null };
 }
 
 export async function getWorkspace(id: string): Promise<Workspace> {
@@ -120,4 +135,12 @@ export async function findUserIdByUsername(username: string): Promise<string | n
     args: [username],
   });
   return res.rows.length > 0 ? (res.rows[0].id as string) : null;
+}
+
+async function rollbackQuietly(tx: { rollback: () => Promise<void> }): Promise<void> {
+  try {
+    await tx.rollback();
+  } catch {
+    // 保留原始写入错误，回滚失败交给数据库连接自行清理。
+  }
 }

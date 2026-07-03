@@ -1,6 +1,9 @@
+import "server-only";
+
 // 会话层（Next 专用入口）：基于 next/headers 的 cookies()。
 // 纯 iron-session 逻辑见 ./seal。
 import { cookies } from "next/headers";
+import { db, ensureSchema } from "@/lib/db";
 import { SESSION_COOKIE, SESSION_TTL, sealSession, unsealSession, type SessionData } from "./seal";
 
 export type { SessionData };
@@ -17,7 +20,17 @@ const cookieOptions = {
 export async function getSession(): Promise<SessionData | null> {
   const sealed = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!sealed) return null;
-  return unsealSession(sealed);
+  const session = await unsealSession(sealed);
+  if (!session) return null;
+
+  await ensureSchema();
+  const res = await db().execute({
+    sql: "SELECT username FROM users WHERE id = ?",
+    args: [session.userId],
+  });
+  const row = res.rows[0];
+  if (!row || row.username !== session.username) return null;
+  return session;
 }
 
 export async function saveSession(data: SessionData): Promise<void> {

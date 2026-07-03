@@ -24,7 +24,8 @@ export function sealSession(data: SessionData): Promise<string> {
 
 export async function unsealSession(sealed: string): Promise<SessionData | null> {
   try {
-    return await unsealData<SessionData>(sealed, { password: sessionPassword() });
+    const data = await unsealData<SessionData>(sealed, { password: sessionPassword() });
+    return isSessionData(data) ? data : null;
   } catch {
     return null;
   }
@@ -43,4 +44,10 @@ function readCookieValue(cookieHeader: string, name: string): string | undefined
     if (key === name) return decodeURIComponent(rest.join("="));
   }
   return undefined;
+}
+
+function isSessionData(data: unknown): data is SessionData {
+  if (!data || typeof data !== "object") return false;
+  const candidate = data as Partial<SessionData>;
+  return typeof candidate.userId === "string" && typeof candidate.username === "string";
 }
