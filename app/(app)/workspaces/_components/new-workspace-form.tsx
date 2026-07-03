@@ -32,9 +32,16 @@ export function NewWorkspaceForm() {
     });
     setLoading(false);
     if (res.ok) {
+      const data = (await res.json().catch(() => null)) as
+        | { workspace?: { id?: string } }
+        | null;
       setName("");
       setOpen(false);
-      router.refresh();
+      if (data?.workspace?.id) {
+        router.push(`/workspaces/${data.workspace.id}`);
+      } else {
+        router.refresh();
+      }
       return;
     }
     const data = (await res.json().catch(() => ({}))) as { error?: string };

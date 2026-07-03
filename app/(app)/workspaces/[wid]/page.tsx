@@ -35,12 +35,14 @@ export default async function WorkspacePage({
 
   const members = await listMembers(wid);
   return (
-    <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col gap-4 px-6 py-6">
+    <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-4 px-6 py-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl tracking-tight">{workspace.name}</h1>
       </div>
-      <MembersPanel currentUserId={session.userId} initialMembers={members} workspaceId={wid} />
-      <WorkspaceChat workspaceId={wid} />
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <WorkspaceChat workspaceId={wid} />
+        <MembersPanel currentUserId={session.userId} initialMembers={members} workspaceId={wid} />
+      </div>
     </div>
   );
 }
