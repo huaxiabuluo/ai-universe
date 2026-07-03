@@ -32,7 +32,14 @@ function rowToWorkspace(row: Record<string, unknown>): Workspace {
 }
 
 export function slugify(name: string): string {
-  const base = name.trim().toLowerCase().replace(/\s+/g, "-").slice(0, 24) || "space";
+  const base =
+    name
+      .normalize("NFKD")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 24) || "space";
   return `${base}-${nanoid(6)}`;
 }
 

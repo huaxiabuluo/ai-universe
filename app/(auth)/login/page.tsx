@@ -17,21 +17,30 @@ export default function LoginPage() {
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (loading) return;
+
+    let shouldResetLoading = true;
     setLoading(true);
     setError(null);
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    if (res.ok) {
-      router.push("/workspaces");
-      router.refresh();
-      return;
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+      if (res.ok) {
+        shouldResetLoading = false;
+        router.push("/workspaces");
+        router.refresh();
+        return;
+      }
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      setError(data.error ?? "登录失败");
+    } catch {
+      setError("网络异常，请稍后重试");
+    } finally {
+      if (shouldResetLoading) setLoading(false);
     }
-    const data = (await res.json().catch(() => ({}))) as { error?: string };
-    setError(data.error ?? "登录失败");
-    setLoading(false);
   }
 
   return (
@@ -40,12 +49,14 @@ export default function LoginPage() {
         <CardTitle className="font-display text-2xl">登录</CardTitle>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4" onSubmit={onSubmit}>
+        <form aria-busy={loading} className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label htmlFor="username">用户名</Label>
             <Input
               autoComplete="username"
               id="username"
+              maxLength={32}
+              minLength={2}
               onChange={(e) => setUsername(e.target.value)}
               required
               value={username}
@@ -56,13 +67,18 @@ export default function LoginPage() {
             <Input
               autoComplete="current-password"
               id="password"
+              minLength={6}
               onChange={(e) => setPassword(e.target.value)}
               required
               type="password"
               value={password}
             />
           </div>
-          {error ? <p className="text-destructive text-sm">{error}</p> : null}
+          {error ? (
+            <p className="text-destructive text-sm" id="login-error" role="alert">
+              {error}
+            </p>
+          ) : null}
           <Button className="w-full" disabled={loading} type="submit">
             {loading ? "登录中…" : "登录"}
           </Button>

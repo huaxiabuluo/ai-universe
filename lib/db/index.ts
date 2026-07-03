@@ -23,6 +23,7 @@ export function db(): Client {
 
 // 首次访问时建表（幂等）。
 export async function ensureSchema(): Promise<void> {
+  await db().execute("PRAGMA foreign_keys = ON");
   if (_initialized) return;
   for (const stmt of SCHEMA) await db().execute(stmt);
   _initialized = true;
