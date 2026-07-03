@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
-import { createWorkspace, listMine, slugify } from "@/lib/workspaces";
+import { createWorkspace, listMine } from "@/lib/workspaces";
 
 export async function GET() {
   const session = await getSession();
@@ -17,7 +17,6 @@ export async function POST(request: Request) {
   if (!name) return NextResponse.json({ error: "缺少空间名称" }, { status: 400 });
   const workspace = await createWorkspace({
     name,
-    slug: slugify(name),
     ownerId: session.userId,
   });
   return NextResponse.json({ workspace });

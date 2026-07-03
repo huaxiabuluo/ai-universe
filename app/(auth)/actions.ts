@@ -1,7 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthError, login, register } from "@/lib/auth";
+import { crossOriginError, isRateLimited, parseAuthInput, validateAuthInput } from "@/lib/auth/request";
 import { saveSession } from "@/lib/auth/session";
 
 export type AuthFormState = {
@@ -30,20 +32,24 @@ async function authenticate(
   mode: "login" | "register",
   formData: FormData,
 ): Promise<AuthFormState | null> {
-  const username = formValue(formData.get("username"));
-  const password = formValue(formData.get("password"));
-  if (!username || !password) return { error: "缺少用户名或密码" };
+  const requestHeaders = await headers();
+  const originError = crossOriginError(requestHeaders);
+  if (originError) return { error: originError };
+  if (isRateLimited(requestHeaders, mode)) return { error: "请求过于频繁，请稍后重试" };
+
+  const input = parseAuthInput({
+    username: formData.get("username"),
+    password: formData.get("password"),
+  });
+  const inputError = validateAuthInput(input, mode);
+  if (inputError) return { error: inputError };
 
   try {
-    const user = mode === "login" ? await login(username, password) : await register(username, password);
+    const user = mode === "login" ? await login(input.username, input.password) : await register(input.username, input.password);
     await saveSession(user);
     return null;
   } catch (error) {
     if (error instanceof AuthError) return { error: error.message };
     throw error;
   }
-}
-
-function formValue(value: FormDataEntryValue | null): string {
-  return typeof value === "string" ? value.trim() : "";
 }

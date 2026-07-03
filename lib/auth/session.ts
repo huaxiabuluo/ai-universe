@@ -1,3 +1,5 @@
+import "server-only";
+
 // 会话层（Next 专用入口）：基于 next/headers 的 cookies()。
 // 纯 iron-session 逻辑见 ./seal。
 import { cookies } from "next/headers";

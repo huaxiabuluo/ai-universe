@@ -43,7 +43,7 @@ export default function RegisterPage() {
             />
           </div>
           {state.error ? (
-            <p className="text-destructive text-sm" id="register-error" role="alert">
+            <p aria-live="polite" className="text-destructive text-sm" id="register-error" role="alert">
               {state.error}
             </p>
           ) : null}

@@ -43,7 +43,7 @@ export default function LoginPage() {
             />
           </div>
           {state.error ? (
-            <p className="text-destructive text-sm" id="login-error" role="alert">
+            <p aria-live="polite" className="text-destructive text-sm" id="login-error" role="alert">
               {state.error}
             </p>
           ) : null}
